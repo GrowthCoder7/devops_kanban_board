@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// Define the TypeScript schema for our MongoDB Task data
 interface Task {
   _id: string;
   title: string;
   description?: string;
   status: 'TODO' | 'IN_PROGRESS' | 'DONE';
   createdAt?: string;
-  updatedAt?: string;
 }
 
 function App() {
-  // Strongly type our state hooks
   const [tasks, setTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -47,8 +44,7 @@ function App() {
     fetchTasks();
   };
 
-  const moveTask = async (id: string, currentStatus: 'TODO' | 'IN_PROGRESS' | 'DONE'): Promise<void> => {
-    const nextStatus: 'TODO' | 'IN_PROGRESS' | 'DONE' = currentStatus === 'TODO' ? 'IN_PROGRESS' : 'DONE';
+  const updateTaskStatus = async (id: string, nextStatus: 'TODO' | 'IN_PROGRESS' | 'DONE'): Promise<void> => {
     await fetch(`${API_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -62,45 +58,118 @@ function App() {
     fetchTasks();
   };
 
+  // --- HTML5 Drag & Drop Logic API ---
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('text/plain', id);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // Required to allow a drop event to fire
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetStatus: 'TODO' | 'IN_PROGRESS' | 'DONE') => {
+    const id = e.dataTransfer.getData('text/plain');
+    if (id) {
+      await updateTaskStatus(id, targetStatus);
+    }
+  };
+
+  // --- Analytical Calculations ---
+  const todoCount = tasks.filter(t => t.status === 'TODO').length;
+  const progressCount = tasks.filter(t => t.status === 'IN_PROGRESS').length;
+  const doneCount = tasks.filter(t => t.status === 'DONE').length;
+
   return (
     <div className="container">
       <header>
-        <h1>⚛️ TypeScript DevOps Kanban</h1>
+        <div>
+          <h1>⚙️ Enterprise DevOps Pipeline Dashboard</h1>
+          <p style={{ margin: "5px 0 0 0", opacity: 0.7, fontSize: "14px" }}>Multi-stage TypeScript Compilation Blueprint</p>
+        </div>
         <span className="badge">Production Live</span>
       </header>
 
+      {/* Analytics Dashboard Strip */}
+      <div className="metrics-bar">
+        <div className="metric-card">
+          <span className="metric-num">{tasks.length}</span>
+          <span className="metric-label">Total Scope</span>
+        </div>
+        <div className="metric-card border-todo">
+          <span className="metric-num">{todoCount}</span>
+          <span className="metric-label">Backlog</span>
+        </div>
+        <div className="metric-card border-progress">
+          <span className="metric-num">{progressCount}</span>
+          <span className="metric-label">Active Sprints</span>
+        </div>
+        <div className="metric-card border-done">
+          <span className="metric-num">{doneCount}</span>
+          <span className="metric-label">Shipped Code</span>
+        </div>
+      </div>
+
       <form onSubmit={addTask} className="task-form">
-        <h3>Create New Task</h3>
-        <input 
-          type="text" 
-          placeholder="Task Title..." 
-          value={title} 
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)} 
-        />
-        <input 
-          type="text" 
-          placeholder="Task Description..." 
-          value={description} 
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)} 
-        />
-        <button type="submit">Add Task</button>
+        <h3>Create Core Requirement Task</h3>
+        <div className="form-inputs">
+          <input 
+            type="text" 
+            placeholder="What needs to be engineered?..." 
+            value={title} 
+            onChange={(e) => setTitle(e.target.value)} 
+          />
+          <input 
+            type="text" 
+            placeholder="Add technical specification context..." 
+            value={description} 
+            onChange={(e) => setDescription(e.target.value)} 
+          />
+          <button type="submit">+ Commit Task</button>
+        </div>
       </form>
 
+      {/* Kanban Drag Matrix Grid */}
       <div className="board">
         {(['TODO', 'IN_PROGRESS', 'DONE'] as const).map((statusColumn) => (
-          <div key={statusColumn} className="column">
-            <h2>{statusColumn.replace('_', ' ')}</h2>
+          <div 
+            key={statusColumn} 
+            className="column"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, statusColumn)}
+          >
+            <h2>
+              {statusColumn === 'TODO' && '📋 Backlog'}
+              {statusColumn === 'IN_PROGRESS' && '⚡ In Development'}
+              {statusColumn === 'DONE' && '✅ Production Ready'}
+              <span className="col-count">
+                {statusColumn === 'TODO' && todoCount}
+                {statusColumn === 'IN_PROGRESS' && progressCount}
+                {statusColumn === 'DONE' && doneCount}
+              </span>
+            </h2>
+            
             <div className="card-container">
               {tasks
                 .filter((task) => task.status === statusColumn)
                 .map((task) => (
-                  <div key={task._id} className="card">
+                  <div 
+                    key={task._id} 
+                    className="card"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, task._id)}
+                  >
+                    <div className="drag-handle">⋮⋮</div>
                     <h3>{task.title}</h3>
                     <p>{task.description}</p>
                     <div className="actions">
-                      {task.status !== 'DONE' && (
-                        <button onClick={() => moveTask(task._id, task.status)}>➡ Move</button>
-                      )}
+                      <div className="nav-arrows">
+                        {task.status !== 'TODO' && (
+                          <button onClick={() => updateTaskStatus(task._id, task.status === 'DONE' ? 'IN_PROGRESS' : 'TODO')}>◀</button>
+                        )}
+                        {task.status !== 'DONE' && (
+                          <button onClick={() => updateTaskStatus(task._id, task.status === 'TODO' ? 'IN_PROGRESS' : 'DONE')}>▶</button>
+                        )}
+                      </div>
                       <button className="delete-btn" onClick={() => deleteTask(task._id)}>🗑</button>
                     </div>
                   </div>
