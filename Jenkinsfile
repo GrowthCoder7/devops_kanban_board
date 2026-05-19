@@ -27,8 +27,8 @@ pipeline {
                 sh 'docker stop kanban-api-prod || true'
                 sh 'docker rm kanban-api-prod || true'
                 
-                // Connects the production container to the existing dev database network
-                sh "docker run -d --name kanban-api-prod --network devops_kanban_default -p 5050:5000 ${IMAGE_NAME}:latest"
+                // Fixed network name to match your folder structure exactly
+                sh "docker run -d --name kanban-api-prod --network devops_kanban_board_default -p 5050:5000 ${IMAGE_NAME}:latest"
             }
         }
     }
