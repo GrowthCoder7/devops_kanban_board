@@ -27,7 +27,7 @@ function App() {
   };
 
   useEffect(() => {
-    fetchTasks()
+    fetchTasks();
   }, []);
 
   const addTask = async (e: React.FormEvent): Promise<void> => {
