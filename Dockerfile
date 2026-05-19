@@ -1,20 +1,23 @@
-# Use a lightweight, official Node.js image
+# === STAGE 1: Build the TypeScript React Frontend ===
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app
+# Copy package files from the frontend folder
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm install
+# Copy the rest of the frontend source code
+COPY frontend/ ./frontend/
+# Run the Vite production build (compiles TS into static HTML/JS inside frontend/dist)
+RUN cd frontend && npm run build
+
+# === STAGE 2: Set up the Production Backend Server ===
 FROM node:20-alpine
-
-# Set the working directory inside the container
 WORKDIR /usr/src/app
-
-# Copy package.json and package-lock.json first to cache layers efficiently
 COPY package*.json ./
-
-# Install only production dependencies
 RUN npm install --only=production
-
-# Copy the rest of your application code
 COPY . .
 
-# Expose the port your app runs on
-EXPOSE 5000
+# Copy the compiled production assets from Stage 1 into the absolute backend public folder
+COPY --from=frontend-builder /app/frontend/dist ./public
 
-# Command to run the application
+EXPOSE 5000
 CMD ["npm", "start"]
