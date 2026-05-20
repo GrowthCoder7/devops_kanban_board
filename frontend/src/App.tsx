@@ -220,7 +220,22 @@ function App() {
         {/* Dynamic Kanban Matrix Structural Layout Grid */}
         <main className="kanban-matrix-grid">
           {(['TODO', 'IN_PROGRESS', 'DONE'] as const).map((columnKey) => {
-            const columnTasks = filteredTasks.filter(t => t.status === columnKey);
+            // Filter and sort tasks dynamically by Priority and Story Points
+            const columnTasks = filteredTasks
+              .filter(t => t.status === columnKey)
+              .sort((a, b) => {
+                const priorityWeights = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+                const weightA = priorityWeights[a.priority] || 2;
+                const weightB = priorityWeights[b.priority] || 2;
+
+                // Sort 1: Priority Tier Descending (High -> Medium -> Low)
+                if (weightA !== weightB) {
+                  return weightB - weightA;
+                }
+                // Sort 2: Story Points Descending (Highest point effort floats up)
+                return b.storyPoints - a.storyPoints;
+              });
+
             const columnSPTotal = columnTasks.reduce((acc, curr) => acc + (curr.storyPoints || 0), 0);
             
             return (
