@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+// 1. Upgraded robust interface mapping enterprise issue schemas
 interface Task {
   _id: string;
   title: string;
   description?: string;
   status: 'TODO' | 'IN_PROGRESS' | 'DONE';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  storyPoints: number;
   createdAt?: string;
 }
 
@@ -13,6 +16,12 @@ function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM');
+  const [storyPoints, setStoryPoints] = useState<number>(1);
+
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedPriorityFilter, setSelectedPriorityFilter] = useState<string>('ALL');
 
   const API_URL = '/api/tasks';
 
@@ -34,13 +43,22 @@ function App() {
     e.preventDefault();
     if (!title) return alert('Task title is required');
     
+    // Injecting the new complex payload properties
     await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description }),
+      body: JSON.stringify({ 
+        title, 
+        description, 
+        priority, 
+        storyPoints: Number(storyPoints) 
+      }),
     });
+    
     setTitle('');
     setDescription('');
+    setPriority('MEDIUM');
+    setStoryPoints(1);
     fetchTasks();
   };
 
@@ -58,13 +76,13 @@ function App() {
     fetchTasks();
   };
 
-  // --- HTML5 Drag & Drop Logic API ---
+  // HTML5 Native Drag & Drop Core Engine
   const handleDragStart = (e: React.DragEvent, id: string) => {
     e.dataTransfer.setData('text/plain', id);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault(); // Required to allow a drop event to fire
+    e.preventDefault();
   };
 
   const handleDrop = async (e: React.DragEvent, targetStatus: 'TODO' | 'IN_PROGRESS' | 'DONE') => {
@@ -74,109 +92,201 @@ function App() {
     }
   };
 
-  // --- Analytical Calculations ---
-  const todoCount = tasks.filter(t => t.status === 'TODO').length;
-  const progressCount = tasks.filter(t => t.status === 'IN_PROGRESS').length;
-  const doneCount = tasks.filter(t => t.status === 'DONE').length;
+  // --- Real-time Dynamic Data Transformation Matrix ---
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = 
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesPriority = 
+      selectedPriorityFilter === 'ALL' || task.priority === selectedPriorityFilter;
+    
+    return matchesSearch && matchesPriority;
+  });
+
+  // --- Agile Velocity Aggregate Computations ---
+  const totalBacklogPoints = tasks.filter(t => t.status === 'TODO').reduce((acc, curr) => acc + (curr.storyPoints || 0), 0);
+  const totalProgressPoints = tasks.filter(t => t.status === 'IN_PROGRESS').reduce((acc, curr) => acc + (curr.storyPoints || 0), 0);
+  const velocityShippedPoints = tasks.filter(t => t.status === 'DONE').reduce((acc, curr) => acc + (curr.storyPoints || 0), 0);
 
   return (
-    <div className="container">
-      <header>
-        <div>
-          <h1>⚙️ Enterprise DevOps Pipeline Dashboard</h1>
-          <p style={{ margin: "5px 0 0 0", opacity: 0.7, fontSize: "14px" }}>Multi-stage TypeScript Compilation Blueprint</p>
-        </div>
-        <span className="badge">Production Live</span>
-      </header>
-
-      {/* Analytics Dashboard Strip */}
-      <div className="metrics-bar">
-        <div className="metric-card">
-          <span className="metric-num">{tasks.length}</span>
-          <span className="metric-label">Total Scope</span>
-        </div>
-        <div className="metric-card border-todo">
-          <span className="metric-num">{todoCount}</span>
-          <span className="metric-label">Backlog</span>
-        </div>
-        <div className="metric-card border-progress">
-          <span className="metric-num">{progressCount}</span>
-          <span className="metric-label">Active Sprints</span>
-        </div>
-        <div className="metric-card border-done">
-          <span className="metric-num">{doneCount}</span>
-          <span className="metric-label">Shipped Code</span>
-        </div>
-      </div>
-
-      <form onSubmit={addTask} className="task-form">
-        <h3>Create Core Requirement Task</h3>
-        <div className="form-inputs">
-          <input 
-            type="text" 
-            placeholder="What needs to be engineered?..." 
-            value={title} 
-            onChange={(e) => setTitle(e.target.value)} 
-          />
-          <input 
-            type="text" 
-            placeholder="Add technical specification context..." 
-            value={description} 
-            onChange={(e) => setDescription(e.target.value)} 
-          />
-          <button type="submit">+ Commit Task</button>
-        </div>
-      </form>
-
-      {/* Kanban Drag Matrix Grid */}
-      <div className="board">
-        {(['TODO', 'IN_PROGRESS', 'DONE'] as const).map((statusColumn) => (
-          <div 
-            key={statusColumn} 
-            className="column"
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, statusColumn)}
-          >
-            <h2>
-              {statusColumn === 'TODO' && '📋 Backlog'}
-              {statusColumn === 'IN_PROGRESS' && '⚡ In Development'}
-              {statusColumn === 'DONE' && '✅ Production Ready'}
-              <span className="col-count">
-                {statusColumn === 'TODO' && todoCount}
-                {statusColumn === 'IN_PROGRESS' && progressCount}
-                {statusColumn === 'DONE' && doneCount}
-              </span>
-            </h2>
-            
-            <div className="card-container">
-              {tasks
-                .filter((task) => task.status === statusColumn)
-                .map((task) => (
-                  <div 
-                    key={task._id} 
-                    className="card"
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, task._id)}
-                  >
-                    <div className="drag-handle">⋮⋮</div>
-                    <h3>{task.title}</h3>
-                    <p>{task.description}</p>
-                    <div className="actions">
-                      <div className="nav-arrows">
-                        {task.status !== 'TODO' && (
-                          <button onClick={() => updateTaskStatus(task._id, task.status === 'DONE' ? 'IN_PROGRESS' : 'TODO')}>◀</button>
-                        )}
-                        {task.status !== 'DONE' && (
-                          <button onClick={() => updateTaskStatus(task._id, task.status === 'TODO' ? 'IN_PROGRESS' : 'DONE')}>▶</button>
-                        )}
-                      </div>
-                      <button className="delete-btn" onClick={() => deleteTask(task._id)}>🗑</button>
-                    </div>
-                  </div>
-                ))}
+    <div className="app-viewport">
+      <div className="dashboard-container">
+        
+        {/* Navigation / Header Brand Bar */}
+        <header className="brand-header">
+          <div className="brand-meta">
+            <span className="platform-logo">◤</span>
+            <div>
+              <h1>LINEAR_DEVOPS_BOARD</h1>
+              <p className="sub-title">System Runtime Execution Framework Matrix</p>
             </div>
           </div>
-        ))}
+          <div className="status-cluster">
+            <span className="pulse-indicator"></span>
+            <span className="version-tag">v2.1.0-TS</span>
+          </div>
+        </header>
+
+        {/* Global Control & Metrics Strip */}
+        <section className="analytics-control-panel">
+          <div className="metrics-grid">
+            <div className="metric-tile text-todo">
+              <span className="tile-label">Backlog Weight</span>
+              <span className="tile-value">{totalBacklogPoints} <span className="unit">pts</span></span>
+            </div>
+            <div className="metric-tile text-progress">
+              <span className="tile-label">Active Sprint Load</span>
+              <span className="tile-value">{totalProgressPoints} <span className="unit">pts</span></span>
+            </div>
+            <div className="metric-tile text-done">
+              <span className="tile-label">Velocity Shipped</span>
+              <span className="tile-value">+{velocityShippedPoints} <span className="unit">pts</span></span>
+            </div>
+          </div>
+
+          {/* Runtime Search & Filter Engine Component */}
+          <div className="filter-toolbar">
+            <div className="search-wrapper">
+              <span className="search-icon">🔍</span>
+              <input 
+                type="text" 
+                placeholder="Search issues by title or parameter spec..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="filter-group">
+              <label>Priority Filter:</label>
+              <select 
+                value={selectedPriorityFilter} 
+                onChange={(e) => setSelectedPriorityFilter(e.target.value)}
+              >
+                <option value="ALL">ALL LEVELS</option>
+                <option value="HIGH">CRITICAL HIGH</option>
+                <option value="MEDIUM">MEDIUM SCOPE</option>
+                <option value="LOW">LOW PRIORITY</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        {/* Task Creation Matrix Console */}
+        <section className="console-section">
+          <form onSubmit={addTask} className="interactive-console-form">
+            <div className="main-fields">
+              <input 
+                type="text" 
+                className="input-primary"
+                placeholder="Issue title (e.g., compile system runtime types...)" 
+                value={title} 
+                onChange={(e) => setTitle(e.target.value)} 
+              />
+              <input 
+                type="text" 
+                className="input-secondary"
+                placeholder="Detailed description block..." 
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)} 
+              />
+            </div>
+            
+            <div className="metadata-fields">
+              <div className="selector-block">
+                <label>PRIORITY</label>
+                <select value={priority} onChange={(e) => setPriority(e.target.value as any)}>
+                  <option value="LOW">LOW</option>
+                  <option value="MEDIUM">MEDIUM</option>
+                  <option value="HIGH">HIGH</option>
+                </select>
+              </div>
+
+              <div className="selector-block">
+                <label>STORY_POINTS</label>
+                <select value={storyPoints} onChange={(e) => setStoryPoints(Number(e.target.value))}>
+                  <option value={1}>1 SP</option>
+                  <option value={2}>2 SP</option>
+                  <option value={3}>3 SP</option>
+                  <option value={5}>5 SP</option>
+                  <option value={8}>8 SP</option>
+                </select>
+              </div>
+
+              <button type="submit" className="btn-submit-issue">Execute Issue Deploy ◤</button>
+            </div>
+          </form>
+        </section>
+
+        {/* Dynamic Kanban Matrix Structural Layout Grid */}
+        <main className="kanban-matrix-grid">
+          {(['TODO', 'IN_PROGRESS', 'DONE'] as const).map((columnKey) => {
+            const columnTasks = filteredTasks.filter(t => t.status === columnKey);
+            const columnSPTotal = columnTasks.reduce((acc, curr) => acc + (curr.storyPoints || 0), 0);
+            
+            return (
+              <div 
+                key={columnKey} 
+                className={`matrix-column column-${columnKey.toLowerCase()}`}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, columnKey)}
+              >
+                <div className="column-header">
+                  <div className="column-title-cluster">
+                    <span className="column-dot"></span>
+                    <h2>
+                      {columnKey === 'TODO' && 'BACKLOG_BUFFER'}
+                      {columnKey === 'IN_PROGRESS' && 'ACTIVE_SPRINT'}
+                      {columnKey === 'DONE' && 'PROD_STABLE'}
+                    </h2>
+                    <span className="column-counter-badge">{columnTasks.length}</span>
+                  </div>
+                  <span className="column-weight-badge">{columnSPTotal} SP</span>
+                </div>
+
+                <div className="cards-scroll-container">
+                  {columnTasks.map((task) => (
+                    <div 
+                      key={task._id} 
+                      className={`issue-card border-${task.priority.toLowerCase()}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, task._id)}
+                    >
+                      <div className="card-top-row">
+                        <span className={`priority-tag tag-${task.priority.toLowerCase()}`}>
+                          {task.priority}
+                        </span>
+                        <span className="points-indicator">{task.storyPoints || 1} SP</span>
+                      </div>
+
+                      <h3 className="card-title">{task.title}</h3>
+                      {task.description && <p className="card-description">{task.description}</p>}
+
+                      <div className="card-action-footer">
+                        <div className="manual-nav-arrows">
+                          {task.status !== 'TODO' && (
+                            <button className="nav-arrow-btn" onClick={() => updateTaskStatus(task._id, task.status === 'DONE' ? 'IN_PROGRESS' : 'TODO')}>◀</button>
+                          )}
+                          {task.status !== 'DONE' && (
+                            <button className="nav-arrow-btn" onClick={() => updateTaskStatus(task._id, task.status === 'TODO' ? 'IN_PROGRESS' : 'DONE')}>▶</button>
+                          )}
+                        </div>
+                        <button className="issue-delete-btn" onClick={() => deleteTask(task._id)}>✕ Remove</button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {columnTasks.length === 0 && (
+                    <div className="empty-column-placeholder">
+                      <span className="placeholder-icon">🫙</span>
+                      <p>No Active Line Items</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </main>
+
       </div>
     </div>
   );
