@@ -118,7 +118,7 @@ function App() {
           <div className="brand-meta">
             <span className="platform-logo">◤</span>
             <div>
-              <h1 style={{color:'white'}}>LINEAR_DEVOPS_BOARD</h1>
+              <h1 style={{color:'white'}}>LINEAR DEVOPS BOARD</h1>
               <p className="sub-title">System Runtime Execution Framework Matrix</p>
             </div>
           </div>
