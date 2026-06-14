@@ -6,7 +6,7 @@ interface Task {
   _id: string;
   title: string;
   description?: string;
-  status: 'TODO' | 'PROGRESS' | 'DONE';
+  status: 'TODO' | 'IN_PROGRESS' | 'DONE';
   priority: 'LOW' | 'MEDIUM' | 'HIGH';
   storyPoints: number;
   createdAt?: string;
