@@ -124,7 +124,7 @@ function App() {
           </div>
           <div className="status-cluster">
             <span className="pulse-indicator"></span>
-            <span className="version-tag">v2.1.0-Production</span>
+            <span className="version-tag">v2.2.0-Production</span>
           </div>
         </header>
 
